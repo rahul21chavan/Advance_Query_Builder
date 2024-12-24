@@ -40,6 +40,10 @@ Query Generation: The tool builds a query string dynamically using the provided 
 Query Processing with Gemini API: The query prompt is sent to the Gemini API, which processes it and returns an optimized SQL query.
 SQL Query Output: The generated SQL query is displayed to the user, which can be executed on the desired database.
 
+Integration with Google Gemini API: Uses Google’s generative AI model to create optimized SQL queries based on the provided metadata.
+Metadata from JSON File: Load multiple sets of metadata from a JSON file, making it easy to work with large datasets.
+Output to SQL File: Saves the generated SQL queries into a .sql file, with clear separation between each query.
+
 Example Usage
 Here is an example of how to use the tool:
 
