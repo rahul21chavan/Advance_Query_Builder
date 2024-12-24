@@ -1,0 +1,15 @@
+[
+  {
+    "Columns": "column1, column2, column3",
+    "Table": "sales_data",
+    "Condition": "column1 > 100",
+    "CaseWhen": "country_name",
+    "WindowFunction": "ROW_NUMBER() OVER (PARTITION BY column1 ORDER BY column2)"
+  },
+  {
+    "Columns": "column1, column4, column5",
+    "Table": "customer_data",
+    "Aggregation": "SUM(sales), COUNT(customer_id)",
+    "JoinType": "INNER JOIN"
+  }
+]
