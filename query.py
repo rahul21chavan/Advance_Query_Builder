@@ -1,6 +1,7 @@
 import os
 import google.generativeai as genai
 import dotenv
+import json
 
 dotenv.load_dotenv()
 
@@ -56,78 +57,78 @@ def build_advanced_query(metadata):
     return query
 
 
+def load_metadata_from_file(file_path):
+    """
+    Load metadata from a JSON file.
+    Args:
+        file_path (str): Path to the metadata file.
+    Returns:
+        list: A list of dictionaries containing metadata.
+    """
+    try:
+        with open(file_path, 'r') as file:
+            metadata_list = json.load(file)
+        return metadata_list
+    except Exception as e:
+        print(f"Error reading metadata file: {str(e)}")
+        return []
+
+
+def save_sql_queries_to_file(sql_queries, output_file_path):
+    """
+    Saves the generated SQL queries to a .sql file.
+    Args:
+        sql_queries (list): A list of generated SQL queries.
+        output_file_path (str): Path to the output .sql file.
+    """
+    try:
+        with open(output_file_path, 'w') as file:
+            for idx, query in enumerate(sql_queries, start=1):
+                file.write(f"-- Query {idx}:\n")
+                file.write(query)
+                file.write("\n" + "=" * 50 + "\n")
+        print(f"SQL queries have been saved to {output_file_path}")
+    except Exception as e:
+        print(f"Error saving SQL queries to file: {str(e)}")
+
+
 def main():
     print("🔍 Advanced Query Builder with SQL Features")
 
     try:
-        # Collect metadata from the user
-        metadata = {}
-        print("\nEnter metadata in the following order:")
-        print("1. Columns (e.g., column1, column2, ...)")
-        print("2. Table (e.g., table_name)")
-        print("3. Condition (optional, e.g., column1 > 100)")
-        print("4. Case When (optional, e.g., country_name to numbers)")
-        print("5. Window Function (optional, e.g., ROW_NUMBER() OVER(PARTITION BY column1 ORDER BY column2))")
-        print("6. Subquery (optional, e.g., SELECT * FROM table2 WHERE column2 > 50)")
-        print("7. Aggregation (optional, e.g., SUM(sales), COUNT(column1))")
-        print("8. Join Type (optional, e.g., INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL JOIN)")
-        print("9. Advanced options: Join, GroupBy, Having, OrderBy")
-        print("Type 'done' when finished.")
+        # Ask the user to provide the path to the metadata file
+        metadata_file_path = input("Please enter the path to your metadata JSON file: ").strip()
 
-        # Collect Columns
-        metadata["Columns"] = input("Columns: ").strip()
-
-        # Collect Table
-        metadata["Table"] = input("Table: ").strip()
-
-        # Collect Condition
-        condition = input("Condition (optional): ").strip()
-        if condition:
-            metadata["Condition"] = condition
-
-        # Collect CASE WHEN
-        case_when = input("Case When (optional): ").strip()
-        if case_when:
-            metadata["CaseWhen"] = case_when
-
-        # Collect Window Function
-        window_function = input("Window Function (optional): ").strip()
-        if window_function:
-            metadata["WindowFunction"] = window_function
-
-        # Collect Subquery
-        subquery = input("Subquery (optional): ").strip()
-        if subquery:
-            metadata["Subquery"] = subquery
-
-        # Collect Aggregation Functions
-        aggregation = input("Aggregation (optional): ").strip()
-        if aggregation:
-            metadata["Aggregation"] = aggregation
-
-        # Collect Join Type
-        join_type = input("Join Type (optional): ").strip()
-        if join_type:
-            metadata["JoinType"] = join_type
-
-        # Collect advanced options
-        for key in ["Join", "GroupBy", "Having", "OrderBy"]:
-            value = input(f"{key} (optional): ").strip()
-            if value:
-                metadata[key] = value
-
-        # Ensure mandatory fields are provided
-        if not metadata.get("Columns") or not metadata.get("Table"):
-            print("Columns and Table are required. Exiting...")
+        # Check if the file exists
+        if not os.path.isfile(metadata_file_path):
+            print("Invalid file path. Please try again.")
             return
 
-        # Build the query
-        query = build_advanced_query(metadata)
-        print("\nGenerated Query Prompt:\n", query)
+        # Load metadata from the provided file
+        metadata_list = load_metadata_from_file(metadata_file_path)
 
-        # Generate a response using the Gemini API
-        response = model.generate_content([query])
-        print("\nGemini API Response:\n", response.text)
+        # Ensure at least one metadata set is provided
+        if not metadata_list:
+            print("No metadata found in the file. Exiting...")
+            return
+
+        # List to store the generated SQL queries
+        sql_queries = []
+
+        # Loop over the collected metadata and generate SQL queries
+        for idx, metadata in enumerate(metadata_list, start=1):
+            print(f"\nGenerating query for metadata set {idx}...")
+            # Build the query
+            query = build_advanced_query(metadata)
+            print("\nGenerated Query Prompt:\n", query)
+
+            # Generate a response using the Gemini API
+            response = model.generate_content([query])
+            sql_queries.append(response.text)
+
+        # Save the generated SQL queries to a .sql file
+        output_file_path = metadata_file_path.replace(".json", "_queries.sql")
+        save_sql_queries_to_file(sql_queries, output_file_path)
 
     except Exception as e:
         print("An error occurred:", str(e))
